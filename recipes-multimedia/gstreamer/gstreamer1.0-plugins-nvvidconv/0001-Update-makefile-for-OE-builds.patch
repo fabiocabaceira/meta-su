@@ -1,0 +1,83 @@
+From 421702f904015ccdaab81d13e9079d2f727f5ec9 Mon Sep 17 00:00:00 2001
+From: Matt Madison <matt@madison.systems>
+Date: Sun, 31 Jan 2021 05:48:15 -0800
+Subject: [PATCH] Update makefile for OE builds
+
+Signed-off-by: Matt Madison <matt@madison.systems>
+---
+ Makefile | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
+
+Index: gst-nvvidconv/Makefile
+===================================================================
+--- gst-nvvidconv.orig/Makefile
++++ gst-nvvidconv/Makefile
+@@ -26,42 +26,36 @@
+ # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ SO_NAME := libgstnvvidconv.so
++prefix ?= /usr
++exec_prefix ?= $(prefix)
++libdir ?= $(exec_prefix)/lib
++CUDA_VER ?= 11.4
+ 
+-CC := gcc
+-
+-ARCH := $(shell uname -m)
+-
+-GST_INSTALL_DIR?=/usr/lib/$(ARCH)-linux-gnu/gstreamer-1.0/
+-LIB_INSTALL_DIR?=/usr/lib/$(ARCH)-linux-gnu/tegra/
+-CFLAGS:=
+ LIBS:= -lnvbufsurface -lnvbufsurftransform -lcudart
+ 
+ SRCS := $(wildcard *.c)
+ 
+-ifdef CUDA_VER
+-CUDA_PATH := /usr/local/cuda-$(CUDA_VER)
+-else
+-CUDA_PATH := /usr/local/cuda
+-endif
+-INCLUDES += -I$(CUDA_PATH)/include
+-INCLUDES += -I$(CUDA_PATH)/targets/$(ARCH)-linux/include
+-
+-INCLUDES += -I./
+-
+ PKGS := gstreamer-1.0 \
+ 	gstreamer-base-1.0 \
+ 	gstreamer-video-1.0 \
+ 	gstreamer-allocators-1.0 \
+ 	glib-2.0
+ 
++ifdef CUDA_VER
++PKGS += cuda-$(CUDA_VER) cudart-$(CUDA_VER)
++else
++CUDA_PATH := /usr/local/cuda
++INCLUDES += -I$(CUDA_PATH)/include
++INCLUDES += -I$(CUDA_PATH)/targets/$(ARCH)-linux/include
++endif
++
+ OBJS := $(SRCS:.c=.o)
+ 
+ CFLAGS += -fPIC
+ 
+ CFLAGS += `pkg-config --cflags $(PKGS)`
+ 
+-LDFLAGS = -Wl,--no-undefined -L$(LIB_INSTALL_DIR) -Wl,-rpath,$(LIB_INSTALL_DIR)
+-LDFLAGS += -L$(CUDA_PATH)/targets/$(ARCH)-linux/lib/
++LDFLAGS += -Wl,--no-undefined
+ 
+ LIBS += `pkg-config --libs $(PKGS)`
+ 
+@@ -74,9 +68,10 @@ $(SO_NAME): $(OBJS)
+ 	$(CC) -shared -o $(SO_NAME) $(OBJS) $(LIBS) $(LDFLAGS)
+ 
+ .PHONY: install
+-DEST_DIR?= $(GST_INSTALL_DIR)
++
+ install: $(SO_NAME)
+-	cp -vp $(SO_NAME) $(DEST_DIR)
++	install -d $(DESTDIR)$(libdir)/gstreamer-1.0
++	install -m 0644 $(SO_NAME) $(DESTDIR)$(libdir)/gstreamer-1.0/
+ 
+ .PHONY: clean
+ clean:

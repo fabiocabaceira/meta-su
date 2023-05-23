@@ -1,0 +1,25 @@
+From d6f380c232e224f933968a187d725b425e00d331 Mon Sep 17 00:00:00 2001
+From: Ilies CHERGUI <ilies.chergui@gmail.com>
+Date: Fri, 15 Apr 2022 12:36:09 +0100
+Subject: [PATCH] Fix stringop-truncation warning
+
+Signed-off-by: Ilies CHERGUI <ilies.chergui@gmail.com>
+---
+ nvgst_sample_apps/nvgstplayer-1.0/nvgstplayer.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/nvgst_sample_apps/nvgstplayer-1.0/nvgstplayer.c b/nvgst_sample_apps/nvgstplayer-1.0/nvgstplayer.c
+index dc34c40..0531708 100644
+--- a/nvgst_sample_apps/nvgstplayer-1.0/nvgstplayer.c
++++ b/nvgst_sample_apps/nvgstplayer-1.0/nvgstplayer.c
+@@ -3380,6 +3380,7 @@ get_next_command (attrs_s * t, gchar * buffer, gint buf_size, gboolean reuse)
+   } else {
+     sCm *cm = (sCm *) cml->data;
+     strncpy (buffer, cm->id, buf_size - 1);
++    buffer[buf_size-1] = '\0';
+   }
+ 
+   if (!reuse) {
+-- 
+2.32.0
+

@@ -1,0 +1,67 @@
+From 5ee6d340e6c8b38a2450bb0a6f95a9eda3636dee Mon Sep 17 00:00:00 2001
+From: Matt Madison <matt@madison.systems>
+Date: Sun, 24 Mar 2019 09:16:52 -0700
+Subject: [PATCH] Fix makefile to work with OE builds
+
+and to build for Tegra, not desktop.
+
+
+Signed-off-by: Matt Madison <matt@madison.systems>
+---
+ Makefile | 44 ++++++++++++++++++++++++++++----------------
+ 1 file changed, 28 insertions(+), 16 deletions(-)
+
+Index: gst-plugins-nv-video-sinks/Makefile
+===================================================================
+--- gst-plugins-nv-video-sinks.orig/Makefile
++++ gst-plugins-nv-video-sinks/Makefile
+@@ -34,18 +34,20 @@ INCLUDES += -I./common \
+ 	-I./common/egl \
+ 	-I./common/renderer \
+ 	-I./common/x11 \
+-	-I/usr/local/include/gstreamer-1.0 \
+-	-I/usr/local/cuda-$(CUDA_VER)/targets/aarch64-linux/include/ \
+-	-I../
+ 
+ PKGS := glib-2.0 \
+ 	gstreamer-1.0 \
+ 	gstreamer-base-1.0 \
+-	gstreamer-video-1.0
++	gstreamer-video-1.0 \
++	glesv2 \
++	egl \
++	cuda-$(CUDA_VER) \
++	cudart-$(CUDA_VER) \
++	x11
+ 
+ OBJS := $(SRCS:.c=.o)
+ 
+-CFLAGS := -fPIC \
++CFLAGS += -fPIC \
+ 	-DNV_VIDEO_SINKS_HAS_EGL \
+ 	-DNV_VIDEO_SINKS_HAS_GL \
+ 	-DNV_VIDEO_SINKS_HAS_NV3DSINK \
+@@ -53,9 +55,9 @@ CFLAGS := -fPIC \
+ 
+ CFLAGS += `pkg-config --cflags $(PKGS)`
+ 
+-LDFLAGS = -Wl,--no-undefined -L/usr/lib/aarch64-linux-gnu/tegra -L/usr/local/cuda-$(CUDA_VER)/targets/aarch64-linux/lib/
++LDFLAGS += -Wl,--no-undefined
+ 
+-LIBS = -lnvbufsurface -lGLESv2 -lEGL -lX11 -lm -lcuda -lcudart
++LIBS = -lnvbufsurface -lm
+ 
+ LIBS += `pkg-config --libs $(PKGS)`
+ 
+@@ -69,9 +71,9 @@ $(SO_NAME): $(OBJS)
+ 
+ .PHONY: install
+ $(DEST_DIR):
+-	mkdir -p $(DEST_DIR)
++	install -d $(DEST_DIR)
+ install: $(SO_NAME) | $(DEST_DIR)
+-	cp -vp $(SO_NAME) $(DEST_DIR)
++	install -m 0644 $(SO_NAME) $(DEST_DIR)
+ 
+ .PHONY: clean
+ clean:
